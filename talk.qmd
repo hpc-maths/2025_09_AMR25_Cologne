@@ -1,5 +1,5 @@
 ---
-title:  Modified equation and error analyses on adaptive meshes for the resolution of evolutionary multi-scale PDEs with Finite Volume schemes
+title:  Modified equation and error analyses on adaptive meshes for the resolution of evolutionary multi-scale PDEs with Finite Volumes
 author:
     - Marc Massot
 format:
@@ -10,7 +10,7 @@ format:
 resources:
   - videos/**
 highlight-style: github
-footer: Conference for Adaptive Mesh Refinement and Applications 2025  &nbsp;&nbsp; <img width="5%" src="figures/by-sa.png"/> &nbsp;&nbsp;  Cologne, July 3rd, 2025
+footer: Conference for Adaptive Mesh Refinement and Applications 2025  &nbsp;&nbsp; <img width="5%" src="figures/by-sa.png"/> &nbsp;&nbsp;  Cologne, September 3rd, 2025
 
 
 ---
@@ -48,3 +48,600 @@ The present work is the result of a team work involving
 :::
 
 ::::
+
+
+# Mesh adaptation and error control
+
+##  Burgers equation - sinus problem
+
+
+$$
+\partial_t u + \partial_x \left ( f(u) \right ) = 0, \quad t \geq 0, \quad x \in \mathbb{R}, \qquad f(u) = \dfrac{u^2}{2},
+$$
+
+
+
+Consider the Cauchy problem with initial conditions:
+
+
+$$
+u^0(x) = \frac{1}{2} (1+\sin(\pi(x-1))) \quad x \in [-1,1]
+$$
+
+{{< include python_sections/burgers_sin.qmd >}}
+
+---
+
+##  Adaptive Multiresolution
+
+
+::: {.row}
+
+:::: {.col-7}
+
+- Minimum level $\underline{\ell}$ and maximum level $\bar{\ell}$.
+- Cells:
+$$
+C_{\ell, k}:=\prod_{\alpha=1}^d\left[2^{-\ell} k_\alpha, 2^{-\ell}\left(k_\alpha+1\right)\right]
+$$
+- Finest step: $\Delta x=2^{-\bar{\ell}}$.
+- Level-wise step: $\Delta x_{\ell}:=2^{-\ell}=2^{\Delta \ell} \Delta x$.
+::::
+
+:::: {.col}
+![](figures/levels_mod.png)
+::::
+:::
+
+
+---
+
+## Wavelets
+
+Decomposition of the solution on a wavelet basis [Daubechies, '88], [Mallat, '89] to measure its local regularity.
+"Practical" approach by [Harten, '95], [Cohen et al., '03].
+
+::: {.row .mt-4}
+
+:::: {.col-6}
+
+**Projection operator**
+
+**Prediction operator** at order $2 s +1$
+
+$$
+{\hat f}_{\ell+1,2 k}={f}_{\ell, k}+\sum_{\sigma=1}^s \psi_\sigma\left({f}_{\ell, k+\sigma}-{f}_{\ell, k-\sigma}\right)
+$$
+
+::::: {style="text-align: left"}
+![](figures/prediction.jpg)
+:::::
+::::
+:::: {.col-6 .fragment}
+
+Details are **regularity indicator**
+$$
+{\mathrm{d}}_{\ell, {k}}:={f}_{\ell, {k}}-{\hat{f}}_{\ell, {k}}
+$$
+
+
+Let $f \in W^{\nu, \infty}$ (neigh. of $C_{\ell, k}$ ), then
+$$
+\left|{\mathrm{d}}_{\ell, k}\right| \lesssim 2^{-\ell \min (\nu, 2 s +1)}|f|_{W^{\min (\nu, 2 s +1), \infty}}
+$$
+
+::::
+:::
+::: {.text-center .mt-4 .fragment}
+
+**Fast wavelet transform:**
+
+means at the finest level can be recast as means at the coarsest level + details
+$$
+\begin{array}{rlr}
+{f}_{\overline{\ell}}
+& \Longleftrightarrow & \left({f}_{\underline{\ell}}, {{d}}_{\underline{\ell} +1}, \ldots, {d}_{\bar{\ell}}\right)\\
+\end{array}
+$$
+
+:::
+
+---
+
+## Mesh coarsening (static)
+
+Local regularity of the solution allows to select areas to coarsen
+
+$$
+{{f}}_{\bar{\ell}} \rightarrow \left({f}_{\underline{\ell}}, {\mathbf{d}}_{\underline{\ell}+1}, \ldots, {\mathbf{d}}_{\bar{\ell}}\right)  \rightarrow \left({f}_{\underline{\ell}}, {\tilde{\mathbf{d}}}_{\underline{\ell}+1}, \ldots, \tilde{{\mathbf{d}}}_{\bar{\ell}}\right) \rightarrow  {\tilde{{f}}}_{\bar{\ell}}
+$$
+$$
+ \tilde{{\mathrm{d}}}_{\ell, k}=
+ \begin{cases}0, & \text { if } \left|{\mathbf{d}}_{\ell, k}\right| \leq \epsilon_{\ell}=2^{-d \Delta \ell} \epsilon, \quad \rightarrow \quad\left\|{\mathbf{f}}_{\bar{\ell}}-\tilde{{\mathbf{f}}}_{\bar{\ell}}\right\|_{\ell^p} \lesssim \epsilon \\
+{\mathrm{d}}_{\ell, k}, & \text { otherwise}
+\end{cases}
+$$
+
+Set a small (below $\epsilon_{\ell}$) detail to zero $\equiv$  erase the cell $C_{\ell, k}$ from the structure
+
+---
+
+## Examples
+
+::::{.row}
+
+:::::{.col}
+:::{.callout-tip title="Equation" icon=false}
+$$
+f(x) = 1 - \sqrt{\left| sin \left( \frac{\pi}{2} x \right) \right|} \; \text{for} \; x\in[-1, 1]
+$$
+:::
+::::
+
+:::::{.col}
+
+<table>
+    <tr>
+        <td>min level</td>
+        <td>1</td>
+    </tr>
+    <tr>
+        <td>max level</td>
+        <td>12</td>
+    </tr>
+    <tr>
+        <td>&#949;</td>
+        <td>10<sup>-3</sup></td>
+    </tr>
+    <tr>
+        <td>compression rate</td>
+        <td>96.29%</td>
+    </tr>
+    <tr>
+        <td>error</td>
+        <td>0.00053</td>
+    </tr>
+</table>
+::::
+
+:::::
+
+![](figures/compression_sqrt.png){fig-align=center}
+
+## Time evolution of PDEs
+
+- Finite volumes with global time step $\Delta t = \Lambda(\Delta x)$
+- Use dynamic mesh refinement
+
+
+Mesh updated using “old” information at time $t$ to accommodate the one at time
+$t + \Delta t$
+
+
+- Propagation of information :  add security cells
+- Formation of singularities : (regularity index: $\nu =0$, $\mu = \min(\nu,2 s +1)$) refine if
+$$
+\left|{\mathbf{d}}_{\ell, k}\right| \geq \epsilon_{\ell}\,2^{d+\mu}
+$$
+
+::: {.text-center}
+![](figures/viscous_burgers.jpg){width=50%}
+:::
+
+
+---
+
+## Finite volumes / conservation / order
+
+
+
+:::{.mb-3}
+Flux evaluation at interfaces between levels
+:::
+![](figures/reconstruction_only_leaves.jpg)
+
+
+
+:::: {.fragment}
+
+:::{.my-3}
+Using the prediction operator allows to evaluate fluxes at the same level
+:::
+
+![](figures/reconstruction.jpg)
+
+::::
+
+:::{.callout-note .mt-3 icon=false title="Finite volume method"}
+We use a Godunov flux for the small hat problem
+:::
+
+
+---
+
+{{< include python_sections/anim_sin.qmd >}}
+
+# Numerical Analysis and Modified Equations
+
+## Linear scalar transport equation
+In this work, we are concerned with the numerical solution of the Cauchy problem associated with the linear scalar conservation law
+
+$$
+\partial_t u(t, x)+V \partial_x u(t, x)=0, \quad(t, x) \in \mathbb{R}^{+} \times \mathbb{R}
+$$
+
+where $V$ is the transport velocity, taken $V>0$ without loss of generality.
+we consider 1 d problems. The extension to $2\mathrm{~d}$ / $3\mathrm{~d}$ problems is straightforward and usually done by tensorization [Bellotti2022] and yields analogous conclusions.
+
+The discrete volumes are
+$$
+C_{\ell, k}:=\left[2^{-\ell} k, 2^{-\ell}(k+1)\right], \quad k \in \{ 0,2^{\ell}-1 \},
+$$
+for any $\ell \in \{ \underline{\ell}, \bar{\ell} \}$. The measure of each cell at level $\ell$ is $\Delta x_{\ell}:=2^{-\ell}$ and we shall indicate $\Delta x:=\Delta x_{\bar{\ell}}$. The cell centers are $x_{\ell, k}:=$ $2^{-\ell}(k+1 / 2)$. Finally, we shall indicate $\Delta \ell:=\bar{\ell}-\ell$, hence $\Delta x_{\ell}=2^{\Delta \ell} \Delta x$.
+
+
+## Finite Volume scheme
+
+Finite Volume scheme at the finest level of resolution $\bar{\ell}$ for any cell of indices $\bar{k} \in \{ 0,2^{\bar{\ell}}-1 \}$. Explicit schemes read:
+
+$$
+\mathrm{v}_{\bar{\ell}, \bar{k}}^{n+1}=\mathrm{v}_{\bar{\ell}, \bar{k}}^n-\frac{\Delta t}{\Delta x}\left(\Phi\left(\mathrm{v}_{\bar{\ell}, \bar{k}+1 / 2}^n\right)-\Phi\left(\mathrm{v}_{\bar{\ell}, \bar{k}-1 / 2}^n\right)\right)
+$$
+
+where we utilize the same linear numerical flux for the left and the right flux (conservativity)
+$$
+\Phi\left(\mathbf{v}_{\bar{\ell}, \bar{k}-1 / 2}\right):=V \sum_{\alpha=\underline{\alpha}}^{\bar{\alpha}} \phi_\alpha \mathbf{v}_{\bar{\ell}, \bar{k}+\alpha}, \quad \Phi\left(\mathbf{v}_{\bar{\ell}, \bar{k}+1 / 2}\right):=V \sum_{\alpha=\underline{\alpha}}^{\bar{\alpha}} \phi_\alpha v_{\bar{\ell}, \bar{k}+1+\alpha}
+$$
+
+## Modified equations
+
+[Carpentier et al 97] or Cauchy-Kowalewski procedure [Harten et al 87]
+
+$$
+\partial_t u\left(t^n, x_{\bar{\ell}, \bar{k}}\right)+V \partial_x u\left(t^n, x_{\bar{\ell}, \bar{k}}\right)=\sum_{h=2}^{+\infty} \Delta x^{h-1} \sigma_h \partial_x^h u\left(t^n, x_{\bar{\ell}, \bar{k}}\right)
+$$
+
+::: {.incremental}
+- Upwind scheme
+$$
+\partial_t u+V \partial_x u=\frac{\Delta x V}{2}(1-\lambda V) \partial_{x x} u+O\left(\Delta x^2\right)
+$$
+- Lax-Wendroff scheme
+$$
+\partial_t u+V \partial_x u=-\frac{\Delta x^2 V}{6}\left(1-\lambda^2 V^2\right) \partial_x^3 u+O\left(\Delta x^3\right)
+$$
+- OSMP-3 scheme
+$$
+\partial_t u+V \partial_x u=\frac{\Delta x^3 V}{24}\left(-\lambda^3 V^2+2 \lambda^2 V^2+\lambda V-2\right) \partial_x^4 u+O\left(\Delta x^4\right)
+$$
+:::
+
+## How to include MRA I
+
+
+We introduce the reconstruction operator $\hat{s}$ instead of $s$ on the cells $\left(\bar{\ell}, 2^{\Delta \ell} k+\delta\right)$ for any $\delta \in \mathbb{Z}$ at the finest level
+
+- $\hat{s}=s$ : exact local flux reconstruction [Cohen et al. 2003].
+- $\hat{s}=0$ but $s>0$, direct evaluation or naive evaluation [Hovhannisyan et al 2010].
+
+
+:::: {.fragment}
+
+$$
+\mathbf{w}_{\bar{\ell}, \bar{k}}^{n+1}=\mathbf{w}_{\bar{\ell}, \bar{k}}^n-\frac{\Delta t}{\Delta x}\left(\Phi\left(\hat{\hat{\mathbf{w}}}_{\bar{\ell}, \bar{k}+1 / 2}^n\right)-\Phi\left(\hat{\hat{\mathbf{w}}}_{\bar{\ell}, \bar{k}-1 / 2}^n\right)\right)
+$$
+$$
+\Phi\left(\hat{\hat{\mathbf{w}}}_{\bar{\ell}, \bar{k}-1 / 2}\right):=V \sum_{\alpha=\underline{\alpha}}^{\bar{\alpha}} \phi_\alpha \hat{\hat{\mathbf{w}}}_{\bar{\ell}, \bar{k}+\alpha}
+$$
+
+::::
+
+## How to include MRA II
+
+Let now $(\ell, k) \in S\left(\tilde{\Lambda}^{n+1}\right)$, taking the projection yields the multiresolution scheme
+
+$$
+\mathbf{w}_{\ell, k}^{n+1}=\mathbf{w}_{\ell, k}^n-\frac{\Delta t}{\Delta x_{\ell}}\left(\Phi\left(\hat{\hat{\mathbf{w}}}_{\bar{\ell}, 2^{\Delta \ell}(k+1)+1 / 2}^n\right)-\Phi\left(\hat{\hat{\mathbf{w}}}_{\bar{\ell}, 2^{\Delta \ell} k-1 / 2}^n\right)\right)
+$$
+
+$$
+\Phi\left(\hat{\hat{\mathbf{w}}}_{\bar{\ell}, 2^{\Delta \ell} k-1 / 2}\right):=V \sum_{\alpha=\underline{\alpha}}^{\bar{\alpha}} \phi_\alpha \hat{\hat{\mathbf{w}}}_{\bar{\ell}, 2^{\Delta \ell} k+\alpha}
+$$
+
+:::{.my-4}
+Some information is loss because of the averaging procedure: two different schemes we can consider for the computation of the modified equations.
+:::
+
+:::{.callout-important icon=false title="Theorem"}
+The local truncation error of the reference Finite Volume scheme and the one of the adaptive Finite Volume scheme are the same up to order $2\hat{s}+1$ included.
+:::
+
+
+## Modified equations including MRA
+
+
+This result establishes at which order the modified equations of the reference scheme are perturbed by the introduction of the adaptive scheme. However, it does not characterize the terms in the modified equations above order $2\hat{s}+1$ in $\Delta x$ (symbolic computations).
+
+
+::: {.incremental}
+- Upwind scheme (original)
+$$
+{\color{blue}{%
+\partial_t u+V \partial_x u=\frac{\Delta x V}{2}(1-\lambda V) \partial_{x x} u+O\left(\Delta x^2\right)
+}}
+$$
+- Upwind scheme with MRA
+$$
+\begin{array}{lr}
+\partial_t u+V \partial_x u=\frac{\Delta x V}{2}\left(2^{\Delta \ell}-\lambda V\right) \partial_{x x} u+O\left(\Delta x^2\right), & \text { for } \hat{s}=0 \\
+\partial_t u+V \partial_x u=\frac{\Delta x V}{2}(1-\lambda V) \partial_{x x} u-\frac{\Delta x^2 V}{6}\left(1-\lambda^2 V^2\right) \partial_x^3 u+& \\
+\ \ \ \ \ \ \ \ \ \ \frac{\Delta x^3 V}{24}\left(-3 \Delta \ell 2^{2 \Delta \ell}+2^{2 \Delta \ell}-\lambda^3 V^3\right) \partial_x^4 u+O\left(\Delta x^4\right), & \text { for } \hat{s}=1
+\end{array}
+$$
+:::
+
+
+
+## Modified equations including MRA
+
+
+This result establishes at which order the modified equations of the reference scheme are perturbed by the introduction of the adaptive scheme. However, it does not characterize the terms in the modified equations above order $2\hat{s}+1$ in $\Delta x$ (symbolic computations).
+
+
+::: {.incremental}
+- Lax-Wendroff scheme (original)
+$$
+{\color{blue}{\partial_t u+V \partial_x u=-\frac{\Delta x^2 V}{6}\left(1-\lambda^2 V^2\right) \partial_x^3 u+O\left(\Delta x^3\right)}}
+$$
+- Lax-Wendroff scheme with MRA
+$$
+\begin{array}{lr}
+\partial_t u+V \partial_x u=\frac{\Delta x \lambda V^2}{2}\left(2^{\Delta \ell}-1\right) \partial_{x x} u+O\left(\Delta x^2\right), &  \text { for } \hat{s}=0 \\
+\partial_t u+V \partial_x u=-\frac{\Delta x^2 V}{6}\left(1-\lambda^2 V^2\right) \partial_x^3 u+&\\
+\ \ \ \ \ \ \ \ \ \ \frac{\Delta x^3 \lambda V^2}{24}\left(-3 \Delta \ell 2^{2 \Delta \ell}+2^{2 \Delta \ell}-\lambda^2 V^2\right) \partial_x^4 u+O\left(\Delta x^4\right), & \text { for }  \hat{s}=1
+\end{array}
+$$
+
+:::
+
+
+
+
+
+
+## Theoretical results on the global error
+
+:::{.callout-important icon=false title="Theorem 2"}
+Assume that
+
+- The reference scheme satisfies the restricted stability condition $\|E\| \leq 1$
+- The Harten-like scheme satisfies the restricted stability condition $\left\|\bar{E}_{\Lambda}\right\| \leq 1$ for any $\Lambda$.
+
+Then, for smooth solution, in the limit $\Delta x \rightarrow 0$ (i.e. $\bar{\ell} \rightarrow+\infty$ ) and for $\Delta \underline{\ell}=\bar{\ell}-\underline{\ell}$ kept fixed, we have the error estimate
+
+$$
+\left\|\mathbf{v}_{\bar{\ell}}^n-\mathbf{w}_{\bar{\ell}}^n\right\| \leq C_{t r} t^n \Delta x^{2 \hat{s}+1}+C_{m r} \frac{t^n}{\lambda \Delta x} \epsilon
+$$
+
+where $C_{t r}=C_{t r}\left(\bar{\ell}-\underline{\ell},\left(\phi_\alpha\right)_\alpha, \lambda, \hat{s}, V\right)$ and $C_{m r}=C_{m r}\left(\bar{\ell}-\underline{\ell},\left(\phi_\alpha\right)_\alpha, \lambda, \hat{s}, s, V\right)$.
+$$
+\left\|\mathbf{u}_{\bar{\ell}}^n-\mathbf{w}_{\bar{\ell}}^n\right\| \leq C_{r e f} t^n \Delta x^\theta+C_{t r} t^n \Delta x^{2 \hat{s}+1}+C_{m r} \frac{t^n}{\lambda \Delta x} \epsilon
+$$
+:::
+# Burgers results
+
+---
+
+## Burgers results (Error for scheme order 1)
+
+{{< include python_sections/err_order01_eps1e-3.qmd >}}
+
+---
+
+## Burgers results (Error for scheme order 1)
+
+{{< include python_sections/err_order01_eps1e-4.qmd >}}
+
+---
+
+## Burgers results (Error for scheme order 1)
+
+{{< include python_sections/err_order01_eps1e-5.qmd >}}
+
+---
+
+
+## Burgers results (MR solution and level for scheme order 1)
+
+{{< include python_sections/sol_level_MR_order01_eps1e-3.qmd >}}
+
+---
+
+## Burgers results (MR solution and error for scheme order 1)
+
+{{< include python_sections/sol_error_MR_order01_eps1e-3.qmd >}}
+
+---
+
+## Burgers results (MR+MLF sol. and level for scheme order 1)
+
+{{< include python_sections/sol_level_MR_MLF_order01_eps1e-3.qmd >}}
+
+---
+
+## Burgers results (MR+MLF sol. and error for scheme order 1)
+
+{{< include python_sections/sol_error_MR_MLF_order01_eps1e-3.qmd >}}
+
+---
+
+## Burgers results (Error for scheme order 1)
+
+{{< include python_sections/err_order01_eps1e-5.qmd >}}
+
+---
+
+## Burgers results (MR solution and level for scheme order 1)
+
+{{< include python_sections/sol_level_MR_order01_eps1e-5.qmd >}}
+
+---
+
+## Burgers results (MR solution and error for scheme order 1)
+
+{{< include python_sections/sol_error_MR_order01_eps1e-5.qmd >}}
+
+---
+
+## Burgers results (MR+MLF sol. and level for scheme order 1)
+
+{{< include python_sections/sol_level_MR_MLF_order01_eps1e-5.qmd >}}
+
+---
+
+## Burgers results (MR+MLF sol. and error for scheme order 1)
+
+{{< include python_sections/sol_error_MR_MLF_order01_eps1e-5.qmd >}}
+
+
+---
+
+## Burgers results (Error for scheme order 3)
+
+{{< include python_sections/err_order03_eps1e-4.qmd >}}
+
+---
+
+
+## Burgers results (Error for scheme order 3)
+
+{{< include python_sections/err_order03_eps1e-5.qmd >}}
+
+---
+
+## Burgers results (MR solution and level for scheme order 3)
+
+{{< include python_sections/sol_level_MR_order03_eps1e-4.qmd >}}
+
+---
+
+## Burgers results (MR solution and error for scheme order 3)
+
+{{< include python_sections/sol_error_MR_order03_eps1e-4.qmd >}}
+
+---
+
+## Burgers results (MR+MLF sol. and level for scheme order 3)
+
+{{< include python_sections/sol_level_MR_MLF_order03_eps1e-4.qmd >}}
+
+---
+
+## Burgers results (MR+MLF sol. and error for scheme order 3)
+
+{{< include python_sections/sol_error_MR_MLF_order03_eps1e-4.qmd >}}
+
+---
+
+
+## Burgers results (MR VS MR+MLF error for scheme order 3)
+
+{{< include python_sections/error_MR_VS_MR_MLF_order03_eps1e-4.qmd >}}
+
+
+---
+
+
+## Burgers 2D results (MR+MLF solution order 1) 
+
+
+::::{.center-page-vertically}
+:::{.text-center}
+<video data-autoplay width="99%" src="videos/burgers2d.mp4" />
+:::
+::::
+
+ 
+---
+
+## Euler 2D results (MR+MLF solution order 3 (OSMP scheme)) 
+
+
+<!-- :::{.text-center}
+![](figures/Bsvortex_osmp3_InitialState_MRAMLF_eps1e-03.png){width=47%}
+![](figures/Bsvortex_osmp3_Tf10_MRAMLF_eps1e-03.png){width=47%}
+::: -->
+
+::: {layout-nrow=2}
+![](figures/AdaptedMesh_BSvortex_InitialState_level3_9_eps1e-03_MRAFLF_highest){width=47%}
+![](figures/Bsvortex_osmp3_Density_T00_MRAMLF_eps1e-03.png){width=47%}
+![](figures/AdaptedMesh_BSvortex_Tf10_level3_9_eps1e-03_MRAFLF_highest.png){width=47%}
+![](figures/Density_contours_BSvortex_Tf10_level3_9_eps1e-03_MRAFLF_highest.png){width=47%}
+
+<!-- ![](figures/Bsvortex_osmp3_Density_T00_MRAMLF_eps1e-03){width=47%}
+![](figures/Bsvortex_osmp3_VelocityMagnitude_T00_MRAMLF_eps1e-03.png){width=47%}
+![](figures/Bsvortex_osmp3_Density_T10_MRAMLF_eps1e-03.png){width=47%}
+![](figuresBsvortex_osmp3_VelocityMagnitude_T10_MRAMLF_eps1e-03.png){width=47%} -->
+:::
+
+---
+
+## Euler 2D results (MR+MLF solution order 3 (OSMP scheme)) 
+
+
+<!-- :::{.text-center}
+![](figures/Bsvortex_osmp3_InitialState_MRAMLF_eps1e-03.png){width=47%}
+![](figures/Bsvortex_osmp3_Tf10_MRAMLF_eps1e-03.png){width=47%}
+::: -->
+
+::: {layout-nrow=2}
+![](figures/AdaptedMesh_BSvortex_InitialState_level3_9_eps1e-03_MRAFLF_highest.png){width=47%}
+![](figures/VelocityMagnitude_contours_BSvortex_Tf00_level3_9_eps1e-03_MRAFLF_highest.png){width=47%}
+![](figures/AdaptedMesh_BSvortex_Tf10_level3_9_eps1e-03_MRAFLF_highest.png){width=47%}
+![](figures/VelocityMagnitude_contours_BSvortex_Tf10_level3_9_eps1e-03_MRAFLF_highest.png){width=47%}
+:::
+
+---
+
+:::::{.center-page}
+:::{.row .align-items-center}
+::::{.col-10}
+<video data-autoplay loop="true" src="videos/Temperature_ShockDDT_H2Air_Stoichio_T325K8_P1atm_t430_700.m4v" />
+::::
+::::{.col}
+::: {layout-nrow=3, layout="[[30],[5],[30],[5],[30]]"}
+![](figures/logo_HPCMaths.jpg)
+
+![](figures/logo_polytechnique.png)
+
+![](figures/cea.png){height="80px"}
+:::
+::::
+:::
+
+:::::
+
+---
+
+## Conclusion {.fs-4}
+
+::::{.align-self-center}
+- Analysis of mesh adaptation completed for convection - extension to reaction and diffusion
+  - Link with AMR important 
+- ImEx strategy implemented in ponio - coupled to samurai 
+  - Implicit source term / explicit  diffusion (no von Neumann stability limit - ROCK)
+- Extension to convection on the way - required fine error analysis
+  - high-order in space and time integration of convection, including shocks (OSMP)
+::::
+
+<div style="position: absolute; top: 50%; transform: translate(0, 10%); text-align: center;">
+
+:::{.row}
+::::{.col-4 .align-self-center}
+![](figures/logo.png)
+::::
+::::{.col .align-self-center}
+<h4>samurai</h4>
+::::
+:::
+</div>
