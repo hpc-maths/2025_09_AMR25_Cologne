@@ -1,5 +1,5 @@
 ---
-title:  Modified equation and error analyses on adaptive meshes for the resolution of evolutionary multi-scale PDEs with Finite Volumes
+title:  Error analyses on adaptive meshes for the resolution of evolutionary multi-scale PDEs
 author:
     - Marc Massot
 format:
@@ -627,11 +627,11 @@ $$
 
 ::::{.align-self-center}
 - Analysis of mesh adaptation completed for convection - extension to reaction and diffusion
-  - Link with AMR important 
-- ImEx strategy implemented in ponio - coupled to samurai 
-  - Implicit source term / explicit  diffusion (no von Neumann stability limit - ROCK)
-- Extension to convection on the way - required fine error analysis
-  - high-order in space and time integration of convection, including shocks (OSMP)
+  - Link with AMR important in terms of accuracy of the simulations
+- Conducting simulation with strict error control requires adpative multiresolution  
+  - Data structure is a key issue - see presentation of **L. Gouarin**
+  - New generation of coupled splitting / ImEx schemes in samurai 
+- Link through the code and developper team to various applications
 ::::
 
 <div style="position: absolute; top: 50%; transform: translate(0, 10%); text-align: center;">
