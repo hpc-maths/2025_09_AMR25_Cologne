@@ -428,6 +428,74 @@ $$
 \left\|\mathbf{u}_{\bar{\ell}}^n-\mathbf{w}_{\bar{\ell}}^n\right\| \leq C_{r e f} t^n \Delta x^\theta+C_{t r} t^n \Delta x^{2 \hat{s}+1}+C_{m r} \frac{t^n}{\lambda \Delta x} \epsilon
 $$
 :::
+
+
+## Comments on theorem
+
+::: {.incremental}
+* The error estimate contains three contributions: the **discretization error** of the reference scheme, the **perturbation error** between the reference and the adaptive scheme, and the **thresholding error** coming from the multiresolution
+* The constant $C_{\mathrm{tr}}$ generally grows exponentially with $\bar{\ell}-\underline{\ell}$, sometimes also involving linear terms, i.e. $\hat{s}=1$. We have the following cases:
+    + $\theta<2 \hat{s}+1$. The error of the reference scheme dominates the perturbation introduced by the adaptive scheme $\left\|\mathbf{u}_{\bar{\ell}}^N-\mathbf{w}_{\bar{\ell}}^N\right\| \leq C_{\mathrm{ref}} T \Delta x^\theta+C_{\mathrm{mr}} \frac{T}{\lambda \Delta x} \epsilon$. A thresholding error of the same order as the reference error $\epsilon \sim \Delta x^{\theta+1}$.
+    + $\theta=2 \hat{s}+1$.  The error of the reference scheme and the perturbation order are comparable (**first example!**) We have $\left\|\mathbf{u}_{\bar{\ell}}^N-\mathbf{w}_{\bar{\ell}}^N\right\| \leq\left(C_{\mathrm{ref}}+C_{\mathrm{tr}}\right) T \Delta x^\theta+C_{\mathrm{mr}} \frac{T}{\lambda \Delta x} \epsilon$.
+    +  $\theta>2 \hat{s}+1$. The perturbation introduced by the adaptive scheme dominates the error of the reference scheme. Therefore, multiresolution introduces a large perturbation that yields a different convergence rate. We have $\left\|\mathbf{u}_{\bar{\ell}}^N-\mathbf{w}_{\bar{\ell}}^N\right\| \leq C_{\mathrm{tr}} T \Delta x^{2 \hat{s}+1}+C_{\mathrm{mr}} \frac{T}{\lambda \Delta x} \epsilon$, thus $\epsilon \sim \Delta x^{2 \hat{s}+2}$ (**AMR !**)
+:::
+
+
+
+:::{.notes}
+Assume that for the choice of $\bar{\ell}-\underline{\ell}$ at hand, we have $C_{\mathrm{tr}} \sim C_{\mathrm{ref}}$, then w
+:::
+
+
+## How to compute fluxes at the finest level
+
+:::{.text-center}
+<video data-autoplay src="videos/portions/portion_0000_autocreated.mp4" />
+:::
+
+:::{.notes}
+As we have seen, calculating the flux at the finest level is crucial to obtaining good error estimates. But how does this work in practice?
+
+Let's take a simple example.
+:::
+
+## How to compute fluxes at the finest level
+
+:::{.text-center}
+<video data-autoplay src="videos/portions/portion_0001_unnamed.mp4" />
+:::
+
+:::{.notes}
+Let's imagine that our finest level is 4 levels away from where we are.
+:::
+
+## How to compute fluxes at the finest level
+
+:::{.text-center}
+<video data-autoplay src="videos/portions/portion_0002_unnamed.mp4" />
+:::
+
+:::{.notes}
+Now let's imagine that we want to calculate the flow using this small cell on the left.
+We use an operator with s = 1, so we need 3 cells on the level below to calculate it. These 3 cells need 4 cells on the level below to be calculated. We can repeat the process indefinitely and we'll still need 4 cells on the bottom level.
+
+We can determine the coefficients of our linear application to go from our level to any cell on a higher level. There's no need for an intermediate level.
+:::
+
+## How to compute fluxes at the finest level
+
+:::{.text-center}
+<video data-autoplay src="videos/portions/portion_0003_unnamed.mp4" />
+:::
+
+:::{.notes}
+We can do the same for the right-hand cell.
+We can see that the cells used are not exactly the same.
+
+Now, if we wanted to reconstruct all the cells of the finest level, we'd only need these 5 cells, with different coefficients depending on the cell we're trying to reconstruct.
+:::
+
+
 # Burgers results
 
 ---
